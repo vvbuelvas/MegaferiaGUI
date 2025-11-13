@@ -1852,8 +1852,18 @@
                       <Font name="Yu Gothic UI" size="18" style="0"/>
                     </Property>
                     <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
-                      <StringArray count="1">
+                      <StringArray count="11">
                         <StringItem index="0" value="Seleccione uno..."/>
+                        <StringItem index="1" value="Pasta dura"/>
+                        <StringItem index="2" value="Pasta blanda"/>
+                        <StringItem index="3" value="EPUB"/>
+                        <StringItem index="4" value="PDF"/>
+                        <StringItem index="5" value="MOBI/AZW"/>
+                        <StringItem index="6" value="MP3"/>
+                        <StringItem index="7" value="MP4"/>
+                        <StringItem index="8" value="WAV"/>
+                        <StringItem index="9" value="WMA"/>
+                        <StringItem index="10" value="Otro"/>
                       </StringArray>
                     </Property>
                   </Properties>
@@ -1877,7 +1887,7 @@
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
                       <Font name="Yu Gothic UI" size="24" style="0"/>
                     </Property>
-                    <Property name="text" type="java.lang.String" value="Autores con mas Libros en diferentes editoriales"/>
+                    <Property name="text" type="java.lang.String" value="Autores con m&#xe1;s Libros en Diferentes Editoriales"/>
                   </Properties>
                 </Component>
                 <Container class="javax.swing.JScrollPane" name="jScrollPane9">
@@ -1890,19 +1900,10 @@
                     <Component class="javax.swing.JTable" name="jTable6">
                       <Properties>
                         <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                          <Table columnCount="12" rowCount="4">
-                            <Column editable="false" title="Titulo" type="java.lang.Object"/>
-                            <Column editable="false" title="Autores" type="java.lang.Object"/>
-                            <Column editable="false" title="ISBN" type="java.lang.Object"/>
-                            <Column editable="false" title="Genero" type="java.lang.Object"/>
-                            <Column editable="false" title="Formato" type="java.lang.Object"/>
-                            <Column editable="false" title="Valor" type="java.lang.Object"/>
-                            <Column editable="false" title="Editorial" type="java.lang.Object"/>
-                            <Column editable="false" title="Nro. Ejem" type="java.lang.Object"/>
-                            <Column editable="false" title="Nro. Pag" type="java.lang.Object"/>
-                            <Column editable="false" title="URL" type="java.lang.Object"/>
-                            <Column editable="false" title="Narrador" type="java.lang.Object"/>
-                            <Column editable="false" title="Duraci&#xf3;n" type="java.lang.Object"/>
+                          <Table columnCount="3" rowCount="4">
+                            <Column editable="false" title="ID" type="java.lang.Object"/>
+                            <Column editable="false" title="Nombre" type="java.lang.Object"/>
+                            <Column editable="false" title="Cantidad" type="java.lang.Object"/>
                           </Table>
                         </Property>
                         <Property name="columnModel" type="javax.swing.table.TableColumnModel" editor="org.netbeans.modules.form.editors2.TableColumnModelEditor">

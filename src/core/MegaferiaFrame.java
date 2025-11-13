@@ -1135,7 +1135,7 @@ public class MegaferiaFrame extends javax.swing.JFrame {
         jLabel28.setText("Formato");
 
         jComboBox11.setFont(new java.awt.Font("Yu Gothic UI", 0, 18)); // NOI18N
-        jComboBox11.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Seleccione uno..." }));
+        jComboBox11.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Seleccione uno...", "Pasta dura", "Pasta blanda", "EPUB", "PDF", "MOBI/AZW", "MP3", "MP4", "WAV", "WMA", "Otro" }));
 
         jButton19.setFont(new java.awt.Font("Yu Gothic UI", 0, 18)); // NOI18N
         jButton19.setText("Consultar");
@@ -1146,21 +1146,21 @@ public class MegaferiaFrame extends javax.swing.JFrame {
         });
 
         jLabel29.setFont(new java.awt.Font("Yu Gothic UI", 0, 24)); // NOI18N
-        jLabel29.setText("Autores con mas Libros en diferentes editoriales");
+        jLabel29.setText("Autores con más Libros en Diferentes Editoriales");
 
         jTable6.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null}
+                {null, null, null},
+                {null, null, null},
+                {null, null, null},
+                {null, null, null}
             },
             new String [] {
-                "Titulo", "Autores", "ISBN", "Genero", "Formato", "Valor", "Editorial", "Nro. Ejem", "Nro. Pag", "URL", "Narrador", "Duración"
+                "ID", "Nombre", "Cantidad"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, false, false, false, false, false
+                false, false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -1402,6 +1402,7 @@ public class MegaferiaFrame extends javax.swing.JFrame {
         this.authors.add(new Author(id, firstname, lastname));
         
         jComboBox3.addItem(id + " - " + firstname + " " + lastname);
+        jComboBox10.addItem(id + " - " + firstname + " " + lastname);
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton16ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton16ActionPerformed
@@ -1677,14 +1678,82 @@ public class MegaferiaFrame extends javax.swing.JFrame {
 
     private void jButton18ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton18ActionPerformed
         // TODO add your handling code here:
+        String[] authorData = jComboBox10.getItemAt(jComboBox10.getSelectedIndex()).split(" - ");
+        long authorId = Long.parseLong(authorData[0]);
+        
+        Author author = null;
+        for (Author auth : this.authors) {
+            if (auth.getId() == authorId) {
+                author = auth;
+            }
+        }
+        
+        DefaultTableModel model = (DefaultTableModel) jTable5.getModel();
+        model.setRowCount(0);
+        
+        for (Book book : author.getBooks()) { 
+            String authors = book.getAuthors().get(0).getFullname();
+            for (int i = 1; i < book.getAuthors().size(); i++) {
+                authors += (", " + book.getAuthors().get(i).getFullname());
+            }
+            if (book instanceof PrintedBook printedBook) {
+                model.addRow(new Object[]{printedBook.getTitle(), authors, printedBook.getIsbn(), printedBook.getGenre(), printedBook.getFormat(), printedBook.getValue(), printedBook.getPublisher().getName(), printedBook.getCopies(), printedBook.getPages(), "-", "-", "-"});
+            }
+            if (book instanceof DigitalBook digitalBook) {
+                model.addRow(new Object[]{digitalBook.getTitle(), authors, digitalBook.getIsbn(), digitalBook.getGenre(), digitalBook.getFormat(), digitalBook.getValue(), digitalBook.getPublisher().getName(), "-", "-", digitalBook.hasHyperlink() ? digitalBook.getHyperlink() : "No", "-", "-"});
+            }
+            if (book instanceof Audiobook audiobook) {
+                model.addRow(new Object[]{audiobook.getTitle(), authors, audiobook.getIsbn(), audiobook.getGenre(), audiobook.getFormat(), audiobook.getValue(), audiobook.getPublisher().getName(), "-", "-", "-", audiobook.getNarrador().getFullname(), audiobook.getDuration()});
+            }
+        }
     }//GEN-LAST:event_jButton18ActionPerformed
 
     private void jButton19ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton19ActionPerformed
         // TODO add your handling code here:
+        String format = jComboBox11.getItemAt(jComboBox11.getSelectedIndex());
+        
+        DefaultTableModel model = (DefaultTableModel) jTable5.getModel();
+        model.setRowCount(0);
+        
+        for (Book book : this.books) { 
+            if (book.getFormat().equals(format)) {
+                String authors = book.getAuthors().get(0).getFullname();
+                for (int i = 1; i < book.getAuthors().size(); i++) {
+                    authors += (", " + book.getAuthors().get(i).getFullname());
+                }
+                if (book instanceof PrintedBook printedBook) {
+                    model.addRow(new Object[]{printedBook.getTitle(), authors, printedBook.getIsbn(), printedBook.getGenre(), printedBook.getFormat(), printedBook.getValue(), printedBook.getPublisher().getName(), printedBook.getCopies(), printedBook.getPages(), "-", "-", "-"});
+                }
+                if (book instanceof DigitalBook digitalBook) {
+                    model.addRow(new Object[]{digitalBook.getTitle(), authors, digitalBook.getIsbn(), digitalBook.getGenre(), digitalBook.getFormat(), digitalBook.getValue(), digitalBook.getPublisher().getName(), "-", "-", digitalBook.hasHyperlink() ? digitalBook.getHyperlink() : "No", "-", "-"});
+                }
+                if (book instanceof Audiobook audiobook) {
+                    model.addRow(new Object[]{audiobook.getTitle(), authors, audiobook.getIsbn(), audiobook.getGenre(), audiobook.getFormat(), audiobook.getValue(), audiobook.getPublisher().getName(), "-", "-", "-", audiobook.getNarrador().getFullname(), audiobook.getDuration()});
+                }
+            }
+        }
     }//GEN-LAST:event_jButton19ActionPerformed
 
     private void jButton20ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton20ActionPerformed
         // TODO add your handling code here:
+        ArrayList<Author> authorsMax = new ArrayList<>();
+        int maxPublishers = -1;
+        for (Author author : this.authors) {
+            if (author.getPublisherQuantity() > maxPublishers) {
+                maxPublishers = author.getPublisherQuantity();
+                authorsMax.clear();
+                authorsMax.add(author);
+            } else if (author.getPublisherQuantity() == maxPublishers) {
+                authorsMax.add(author);
+            }
+        }
+        
+        DefaultTableModel model = (DefaultTableModel) jTable6.getModel();
+        model.setRowCount(0);
+        
+        for (Author author : authorsMax) {
+            model.addRow(new Object[]{author.getId(), author.getFullname(), maxPublishers});
+        }
     }//GEN-LAST:event_jButton20ActionPerformed
 
     /**

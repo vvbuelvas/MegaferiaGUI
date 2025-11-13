@@ -18,6 +18,10 @@ public class Author extends Person {
         super(id, firstname, lastname);
         this.books = new ArrayList<>();
     }
+
+    public ArrayList<Book> getBooks() {
+        return books;
+    }
     
     public int getBookQuantity() {
         return this.books.size();
@@ -25,6 +29,16 @@ public class Author extends Person {
     
     public void addBook(Book book) {
         this.books.add(book);
+    }
+    
+    public int getPublisherQuantity() {
+        ArrayList<Publisher> publishers = new ArrayList<>();
+        for (Book book : this.books) {
+            if (!publishers.contains(book.getPublisher())) {
+                publishers.add(book.getPublisher());
+            }
+        }
+        return publishers.size();
     }
     
 }
