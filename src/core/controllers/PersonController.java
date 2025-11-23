@@ -24,9 +24,6 @@ public class PersonController {
         this.storage = Storage.getInstance();
     }
 
-    
-    
-    
     public Response createAuthor(String idText, String firstname, String lastname) {
         long id;
 

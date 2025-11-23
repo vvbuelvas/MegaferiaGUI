@@ -24,6 +24,7 @@ import java.util.HashMap;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
 import core.controllers.PersonController;
+import core.controllers.PublisherController;
 import core.models.Person;
 import javax.swing.JOptionPane;
 
@@ -42,6 +43,7 @@ public class MegaferiaFrame extends javax.swing.JFrame {
     private ArrayList<Book> books;
     private final StandController standController;
     private final PersonController personController;
+    private final PublisherController publisherController;
 
     /**
      * Creates new form MegaferiaFrame
@@ -52,6 +54,8 @@ public class MegaferiaFrame extends javax.swing.JFrame {
         this.stands = Storage.getInstance().getStands();
         this.standController = new StandController();
         this.personController = new PersonController();
+        this.publisherController = new PublisherController();
+
         this.authors = new ArrayList<>();
         this.managers = new ArrayList<>();
         this.narrators = new ArrayList<>();
@@ -1589,25 +1593,80 @@ public class MegaferiaFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_btnCrearNarradorActionPerformed
 
     private void btnCrearEditorialActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCrearEditorialActionPerformed
-        // TODO add your handling code here:
         String nit = txtNitEditorial.getText();
-        String name = txtNombreEditorial.getText();
-        String address = txtDireccionEditorial.getText();
-        String[] managerData = ddlGerenteEditorial.getItemAt(ddlGerenteEditorial.getSelectedIndex()).split(" - ");
+        String nombre = txtNombreEditorial.getText();
+        String direccion = txtDireccionEditorial.getText();
 
-        long managerId = Long.parseLong(managerData[0]);
-
-        Manager manager = null;
-        for (Manager manag : this.managers) {
-            if (manag.getId() == managerId) {
-                manager = manag;
-            }
+        Object selected = ddlGerenteEditorial.getSelectedItem();
+        if (selected == null) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Debe seleccionar un gerente para la editorial.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
         }
 
-        this.publishers.add(new Publisher(nit, name, address, manager));
+        String gerenteTexto = selected.toString();
+        String[] partes = gerenteTexto.split("-");
+        if (partes.length == 0) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Formato de gerente inválido.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
 
-        ddlEditorialLibro.addItem(name + " (" + nit + ")");
-        ddlAgregarEditorialesComprar.addItem(name + " (" + nit + ")");
+        long gerenteId;
+        try {
+            gerenteId = Long.parseLong(partes[0].trim());
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "El ID del gerente no es válido.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        Response response = publisherController.createPublisher(
+                nit,
+                nombre,
+                direccion,
+                gerenteId
+        );
+
+        int status = response.getStatus();
+
+        if (status >= 400) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    response.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        if (response.getData() != null && response.getData().get("publisher") != null) {
+            Publisher publisher = (Publisher) response.getData().get("publisher");
+            this.publishers.add(publisher);
+        }
+
+        JOptionPane.showMessageDialog(
+                this,
+                response.getMessage(),
+                "Información",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+
+        txtNitEditorial.setText("");
+        txtNombreEditorial.setText("");
+        txtDireccionEditorial.setText("");
     }//GEN-LAST:event_btnCrearEditorialActionPerformed
 
     private void btnAgregarAutorLibroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarAutorLibroActionPerformed
@@ -1778,7 +1837,7 @@ public class MegaferiaFrame extends javax.swing.JFrame {
                     cantLibros = n.getBookQuantity();
                 }
                 default -> {
-                    continue; 
+                    continue;
                 }
             }
 
