@@ -25,6 +25,7 @@ import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
 import core.controllers.PersonController;
 import core.controllers.PublisherController;
+import core.controllers.PurchaseController;
 import core.models.Person;
 import javax.swing.JOptionPane;
 
@@ -44,6 +45,7 @@ public class MegaferiaFrame extends javax.swing.JFrame {
     private final StandController standController;
     private final PersonController personController;
     private final PublisherController publisherController;
+    private PurchaseController purchaseController;
 
     /**
      * Creates new form MegaferiaFrame
@@ -55,6 +57,7 @@ public class MegaferiaFrame extends javax.swing.JFrame {
         this.standController = new StandController();
         this.personController = new PersonController();
         this.publisherController = new PublisherController();
+        this.purchaseController = new PurchaseController();
 
         this.authors = new ArrayList<>();
         this.managers = new ArrayList<>();
@@ -872,7 +875,7 @@ public class MegaferiaFrame extends javax.swing.JFrame {
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(btnAgregarStandComprar, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnEliminarStandComprar, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(btnEliminarStandComprar))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jScrollPane3)
                         .addGap(8, 8, 8)
@@ -1742,67 +1745,207 @@ public class MegaferiaFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_btnCrearLibroActionPerformed
 
     private void btnAgregarStandComprarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarStandComprarActionPerformed
-        // TODO add your handling code here:
-        String stand = ddlStandsComprar.getItemAt(ddlStandsComprar.getSelectedIndex());
-        jtaStandsAgregadosComprar.append(stand + "\n");
+        Object selected = ddlStandsComprar.getSelectedItem();
+        if (selected == null || selected.toString().startsWith("Seleccione")) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Debes seleccionar un stand.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        String textoCombo = selected.toString().trim();
+        String standIdText = textoCombo.split("-")[0].trim();
+
+        String actual = jtaStandsAgregadosComprar.getText();
+        String[] lineas = actual.split("\\R");
+        for (String linea : lineas) {
+            if (linea.trim().equals(standIdText)) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Ese stand ya está agregado.",
+                        "Información",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+                return;
+            }
+        }
+
+        if (actual.isEmpty()) {
+            jtaStandsAgregadosComprar.setText(standIdText);
+        } else {
+            jtaStandsAgregadosComprar.setText(actual + "\n" + standIdText);
+        }
     }//GEN-LAST:event_btnAgregarStandComprarActionPerformed
 
     private void btnEliminarStandComprarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarStandComprarActionPerformed
-        // TODO add your handling code here:
-        String stand = ddlStandsComprar.getItemAt(ddlStandsComprar.getSelectedIndex());
-        jtaStandsAgregadosComprar.setText(jtaStandsAgregadosComprar.getText().replace(stand + "\n", ""));
+        Object selected = ddlStandsComprar.getSelectedItem();
+        if (selected == null || selected.toString().startsWith("Seleccione")) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Debes seleccionar un stand para eliminarlo.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        String textoCombo = selected.toString().trim();
+        String standIdText = textoCombo.split("-")[0].trim();
+
+        String actual = jtaStandsAgregadosComprar.getText();
+        if (actual.isEmpty()) {
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        String[] lineas = actual.split("\\R");
+        for (String linea : lineas) {
+            if (!linea.trim().equals(standIdText)) {
+                if (sb.length() > 0) {
+                    sb.append("\n");
+                }
+                sb.append(linea);
+            }
+        }
+
+        jtaStandsAgregadosComprar.setText(sb.toString());
     }//GEN-LAST:event_btnEliminarStandComprarActionPerformed
 
     private void btnAgregarEditorialComprarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarEditorialComprarActionPerformed
-        // TODO add your handling code here:
-        String publisher = ddlAgregarEditorialesComprar.getItemAt(ddlAgregarEditorialesComprar.getSelectedIndex());
-        jtaEditorialesAgregadosComprar.append(publisher + "\n");
+        Object selected = ddlAgregarEditorialesComprar.getSelectedItem();
+        if (selected == null || selected.toString().startsWith("Seleccione")) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Debes seleccionar una editorial.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        String textoCombo = selected.toString().trim();
+        String actual = jtaEditorialesAgregadosComprar.getText();
+
+        // Evitar duplicados
+        String[] lineas = actual.split("\\R");
+        for (String linea : lineas) {
+            if (linea.trim().equals(textoCombo)) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Esa editorial ya está agregada.",
+                        "Información",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+                return;
+            }
+        }
+
+        if (actual.isEmpty()) {
+            jtaEditorialesAgregadosComprar.setText(textoCombo);
+        } else {
+            jtaEditorialesAgregadosComprar.setText(actual + "\n" + textoCombo);
+        }
     }//GEN-LAST:event_btnAgregarEditorialComprarActionPerformed
 
     private void btnEliminarEditorialComprarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarEditorialComprarActionPerformed
-        // TODO add your handling code here:
-        String publisher = ddlAgregarEditorialesComprar.getItemAt(ddlAgregarEditorialesComprar.getSelectedIndex());
-        jtaEditorialesAgregadosComprar.setText(jtaEditorialesAgregadosComprar.getText().replace(publisher + "\n", ""));
+        Object selected = ddlAgregarEditorialesComprar.getSelectedItem();
+        if (selected == null || selected.toString().startsWith("Seleccione")) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Debes seleccionar una editorial para eliminarla.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        String textoCombo = selected.toString().trim();
+
+        String actual = jtaEditorialesAgregadosComprar.getText();
+        if (actual.isEmpty()) {
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        String[] lineas = actual.split("\\R");
+        for (String linea : lineas) {
+            if (!linea.trim().equals(textoCombo)) {
+                if (sb.length() > 0) {
+                    sb.append("\n");
+                }
+                sb.append(linea);
+            }
+        }
+
+        jtaEditorialesAgregadosComprar.setText(sb.toString());
     }//GEN-LAST:event_btnEliminarEditorialComprarActionPerformed
 
     private void btnComprarStandActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnComprarStandActionPerformed
-        // TODO add your handling code here:
-        String[] standIds = jtaStandsAgregadosComprar.getText().split("\n");
-        String[] publishersData = jtaEditorialesAgregadosComprar.getText().split("\n");
+        String standsText = jtaStandsAgregadosComprar.getText();
+        String publishersText = jtaEditorialesAgregadosComprar.getText();
 
-        ArrayList<Stand> stands = new ArrayList<>();
-        for (String standId : standIds) {
-            for (Stand stand : this.stands) {
-                if (stand.getId() == Long.parseLong(standId)) {
-                    stands.add(stand);
-                }
-            }
+        Response response = purchaseController.assignStandsToPublishers(
+                standsText,
+                publishersText
+        );
+
+        int status = response.getStatus();
+
+        if (status >= 400) {
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    response.getMessage(),
+                    "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE
+            );
+            return;
         }
 
-        ArrayList<Publisher> publishers = new ArrayList<>();
-        for (String publisherData : publishersData) {
-            String publisherNit = publisherData.split(" ")[1].replace("(", "").replace(")", "");
-            for (Publisher publisher : this.publishers) {
-                if (publisher.getNit().equals(publisherNit)) {
-                    publishers.add(publisher);
-                }
-            }
-        }
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                response.getMessage(),
+                "Información",
+                javax.swing.JOptionPane.INFORMATION_MESSAGE
+        );
 
-        for (Stand stand : stands) {
-            for (Publisher publisher : publishers) {
-                stand.addPublisher(publisher);
-                publisher.addStand(stand);
-            }
-        }
+        jtaStandsAgregadosComprar.setText("");
+        jtaEditorialesAgregadosComprar.setText("");
+        ddlStandsComprar.setSelectedIndex(0);
+        ddlAgregarEditorialesComprar.setSelectedIndex(0);
     }//GEN-LAST:event_btnComprarStandActionPerformed
 
     private void btnConsultarEditorialesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConsultarEditorialesActionPerformed
-        // TODO add your handling code here:
-        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        Response response = publisherController.getAllPublishers();
+
+        if (response.getStatus() != Status.OK) {
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    response.getMessage(),
+                    "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        javax.swing.table.DefaultTableModel model
+                = (javax.swing.table.DefaultTableModel) jTable1.getModel();
         model.setRowCount(0);
-        for (Publisher publisher : this.publishers) {
-            model.addRow(new Object[]{publisher.getNit(), publisher.getName(), publisher.getAddress(), publisher.getManager().getFullname(), publisher.getStandQuantity()});
+
+        @SuppressWarnings("unchecked")
+        java.util.ArrayList<java.util.HashMap<String, Object>> list
+                = (java.util.ArrayList<java.util.HashMap<String, Object>>) response.getData().get("publishers");
+
+        for (java.util.HashMap<String, Object> pubMap : list) {
+            model.addRow(new Object[]{
+                pubMap.get("nit"),
+                pubMap.get("name"),
+                pubMap.get("address"),
+                pubMap.get("managerName"),
+                pubMap.get("standQuantity")
+            });
         }
     }//GEN-LAST:event_btnConsultarEditorialesActionPerformed
 
