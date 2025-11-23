@@ -433,10 +433,14 @@ public class BookController {
         for (Book b : allBooks) {
             boolean include;
             include = switch (filter) {
-                case "IMPRESO" -> b instanceof PrintedBook;
-                case "DIGITAL" -> b instanceof DigitalBook;
-                case "AUDIO" -> b instanceof Audiobook;
-                default -> true;
+                case "IMPRESO" ->
+                    b instanceof PrintedBook;
+                case "DIGITAL" ->
+                    b instanceof DigitalBook;
+                case "AUDIO" ->
+                    b instanceof Audiobook;
+                default ->
+                    true;
             }; // "TODOS"
             if (include) {
                 filtered.add(b);
@@ -455,4 +459,141 @@ public class BookController {
 
         return new Response("Libros obtenidos correctamente.", Status.OK, data);
     }
+
+    private Author findAuthorById(long authorId) {
+        for (Person p : storage.getPersons()) {
+            if (p instanceof Author a && a.getId() == authorId) {
+                return a;
+            }
+        }
+        return null;
+    }
+
+    public Response findBooksByAuthor(long authorId) {
+        Author author = findAuthorById(authorId);
+        if (author == null) {
+            return new Response("El autor seleccionado no es válido.",
+                    Status.BAD_REQUEST);
+        }
+
+        List<Book> books = new ArrayList<>(storage.getBooks());
+        List<Book> filtered = new ArrayList<>();
+
+        for (Book b : books) {
+            for (Author a : b.getAuthors()) {
+                if (a.getId() == authorId) {
+                    filtered.add(b);
+                    break;
+                }
+            }
+        }
+
+        filtered.sort(Comparator.comparing(Book::getIsbn));
+
+        ArrayList<HashMap<String, Object>> dataList = new ArrayList<>();
+        for (Book b : filtered) {
+            dataList.add(mapBook(b));
+        }
+
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("books", dataList);
+
+        return new Response("Libros del autor obtenidos correctamente.",
+                Status.OK, data);
+    }
+
+    public Response findBooksByAuthorAndFormat(long authorId, String format) {
+        if (format == null || format.trim().isEmpty()
+                || format.startsWith("Seleccione")) {
+            return new Response("Debes seleccionar un formato válido.",
+                    Status.BAD_REQUEST);
+        }
+
+        Author author = findAuthorById(authorId);
+        if (author == null) {
+            return new Response("El autor seleccionado no es válido.",
+                    Status.BAD_REQUEST);
+        }
+
+        List<Book> books = new ArrayList<>(storage.getBooks());
+        List<Book> filtered = new ArrayList<>();
+
+        for (Book b : books) {
+            if (!b.getFormat().equalsIgnoreCase(format.trim())) {
+                continue;
+            }
+            for (Author a : b.getAuthors()) {
+                if (a.getId() == authorId) {
+                    filtered.add(b);
+                    break;
+                }
+            }
+        }
+
+        filtered.sort(Comparator.comparing(Book::getIsbn));
+
+        ArrayList<HashMap<String, Object>> dataList = new ArrayList<>();
+        for (Book b : filtered) {
+            dataList.add(mapBook(b));
+        }
+
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("books", dataList);
+
+        return new Response("Libros del autor y formato obtenidos correctamente.",
+                Status.OK, data);
+    }
+
+    public Response getAuthorsWithMoreBooksInDifferentPublishers() {
+
+        class AuthorInfo {
+
+            Author author;
+            int bookCount = 0;
+            java.util.HashSet<String> publisherNits = new java.util.HashSet<>();
+        }
+
+        HashMap<Long, AuthorInfo> infoMap = new HashMap<>();
+
+        for (Book b : storage.getBooks()) {
+            String nit = b.getPublisher().getNit();
+
+            for (Author a : b.getAuthors()) {
+                AuthorInfo info = infoMap.get(a.getId());
+                if (info == null) {
+                    info = new AuthorInfo();
+                    info.author = a;
+                    infoMap.put(a.getId(), info);
+                }
+                info.bookCount++;
+                info.publisherNits.add(nit);
+            }
+        }
+
+        // Filtrar autores con libros en ≥ 2 editoriales
+        ArrayList<AuthorInfo> selected = new ArrayList<>();
+        for (AuthorInfo info : infoMap.values()) {
+            if (info.publisherNits.size() >= 2) {
+                selected.add(info);
+            }
+        }
+
+        selected.sort(Comparator.comparingLong(ai -> ai.author.getId()));
+
+        ArrayList<HashMap<String, Object>> dataList = new ArrayList<>();
+        for (AuthorInfo info : selected) {
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("id", info.author.getId());
+            map.put("name", info.author.getFullname());
+            map.put("count", info.bookCount);
+            dataList.add(map);
+        }
+
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("authors", dataList);
+
+        return new Response("Autores con más libros en diferentes editoriales obtenidos correctamente.",
+                Status.OK, data);
+    }
+
 }
