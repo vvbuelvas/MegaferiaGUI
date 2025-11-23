@@ -2,16 +2,12 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package core.controllers.utils;
-import java.util.HashMap;
+package core.controllers;
 
 /**
  *
  * @author Desarrollo TIC
  */
-public class Response {
+public class BookController {
     
-    private String message;
-    private int status;
-    private HashMap<String, Object> data;
 }
