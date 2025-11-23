@@ -19,6 +19,7 @@ import core.models.Author;
 import core.models.Audiobook;
 import core.models.Stand;
 import com.formdev.flatlaf.FlatDarkLaf;
+import core.controllers.BookController;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javax.swing.UIManager;
@@ -46,6 +47,7 @@ public class MegaferiaFrame extends javax.swing.JFrame {
     private final PersonController personController;
     private final PublisherController publisherController;
     private PurchaseController purchaseController;
+    private BookController bookController;
 
     /**
      * Creates new form MegaferiaFrame
@@ -58,12 +60,20 @@ public class MegaferiaFrame extends javax.swing.JFrame {
         this.personController = new PersonController();
         this.publisherController = new PublisherController();
         this.purchaseController = new PurchaseController();
+        this.bookController = new BookController();
 
         this.authors = new ArrayList<>();
         this.managers = new ArrayList<>();
         this.narrators = new ArrayList<>();
         this.publishers = new ArrayList<>();
         this.books = new ArrayList<>();
+
+        ddlLibros.removeAllItems();
+        ddlLibros.addItem("Todos los Libros");
+        ddlLibros.addItem("Libros Impresos");
+        ddlLibros.addItem("Libros Digitales");
+        ddlLibros.addItem("Audiolibros");
+
     }
 
     /**
@@ -473,6 +483,11 @@ public class MegaferiaFrame extends javax.swing.JFrame {
 
         txtGeneroLibro.setFont(new java.awt.Font("Yu Gothic UI", 0, 18)); // NOI18N
         txtGeneroLibro.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Seleccione uno...", "Fantasía urbana", "Ciencia ficción distópica", "Realismo mágico", "Romance histórico", "Thriller psicológico", "Ficción filosófica", "Aventura steampunk", "Terror gótico", "No ficción narrativa", "Ficción postapocalíptica" }));
+        txtGeneroLibro.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtGeneroLibroActionPerformed(evt);
+            }
+        });
 
         btnCrearLibro.setFont(new java.awt.Font("Yu Gothic UI", 0, 18)); // NOI18N
         btnCrearLibro.setText("Crear");
@@ -534,6 +549,11 @@ public class MegaferiaFrame extends javax.swing.JFrame {
 
         ddlEditorialLibro.setFont(new java.awt.Font("Yu Gothic UI", 0, 18)); // NOI18N
         ddlEditorialLibro.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Seleccione uno..." }));
+        ddlEditorialLibro.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ddlEditorialLibroActionPerformed(evt);
+            }
+        });
 
         jLabel18.setFont(new java.awt.Font("Yu Gothic UI", 0, 18)); // NOI18N
         jLabel18.setText("Nro. Ejemplares");
@@ -1137,6 +1157,11 @@ public class MegaferiaFrame extends javax.swing.JFrame {
 
         ddlAutorConsultaLibro.setFont(new java.awt.Font("Yu Gothic UI", 0, 18)); // NOI18N
         ddlAutorConsultaLibro.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Seleccione uno..." }));
+        ddlAutorConsultaLibro.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ddlAutorConsultaLibroActionPerformed(evt);
+            }
+        });
 
         jLabel27.setFont(new java.awt.Font("Yu Gothic UI", 0, 18)); // NOI18N
         jLabel27.setText("Autor");
@@ -1290,7 +1315,10 @@ public class MegaferiaFrame extends javax.swing.JFrame {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jTabbedPane1)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jTabbedPane1)
+                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1685,63 +1713,77 @@ public class MegaferiaFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_btnEliminarAutorLibroActionPerformed
 
     private void btnCrearLibroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCrearLibroActionPerformed
-        // TODO add your handling code here:
-        String title = txtTituloLibro.getText();
-        String[] authorsData = jtaAutoresAgregadosLibro.getText().split("\n");
-        String isbn = txtIsbnLibro.getText();
-        String genre = txtGeneroLibro.getItemAt(txtGeneroLibro.getSelectedIndex());
-        String format = ddlFormatoLibro.getItemAt(ddlFormatoLibro.getSelectedIndex());
-        double value = Double.parseDouble(txtValorLibro.getText());
-        String publisherData = ddlEditorialLibro.getItemAt(ddlEditorialLibro.getSelectedIndex());
+        String title = txtTituloLibro.getText().trim();
+        String authorsText = jtaAutoresAgregadosLibro.getText();
+        String isbn = txtIsbnLibro.getText().trim();
+        String genre = (String) txtGeneroLibro.getSelectedItem();
+        String format = (String) ddlFormatoLibro.getSelectedItem();
+        String valueText = txtValorLibro.getText().trim();
+        String publisherText = (String) ddlEditorialLibro.getSelectedItem();
+        String pagesText = txtNumeroPaginasLibro.getText().trim();
+        String copiesText = txtNumeroEjemplaresLibro.getText().trim();
+        String hyperlink = txtHipervinculoLibro.getText().trim();
+        String durationText = txtDuracionLibro.getText().trim();
+        String narratorText = (String) ddlNarradorLibro.getSelectedItem();
 
-        ArrayList<Author> authors = new ArrayList<>();
-        for (String authorData : authorsData) {
-            long authorId = Long.parseLong(authorData.split(" - ")[0]);
-            for (Author author : this.authors) {
-                if (author.getId() == authorId) {
-                    authors.add(author);
-                }
-            }
+        boolean isPrinted = rdbtnImpresoLibro.isSelected();
+        boolean isDigital = rdbtnDigitalLibro.isSelected();
+        boolean isAudio = rdbtnAudioLibro.isSelected();
+
+        Response response = bookController.createBook(
+                title,
+                authorsText,
+                isbn,
+                genre,
+                format,
+                valueText,
+                publisherText,
+                pagesText,
+                copiesText,
+                hyperlink,
+                durationText,
+                narratorText,
+                isPrinted,
+                isDigital,
+                isAudio
+        );
+
+        if (response.getStatus() != Status.CREATED && response.getStatus() != Status.OK) {
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    response.getMessage(),
+                    "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE
+            );
+            return;
         }
 
-        String publisherNit = publisherData.split(" ")[1].replace("(", "").replace(")", "");
+        javax.swing.JOptionPane.showMessageDialog(
+                this,
+                response.getMessage(),
+                "Información",
+                javax.swing.JOptionPane.INFORMATION_MESSAGE
+        );
 
-        Publisher publisher = null;
-        for (Publisher publish : this.publishers) {
-            if (publish.getNit().equals(publisherNit)) {
-                publisher = publish;
-            }
-        }
+        // Limpieza 
+        txtTituloLibro.setText("");
+        jtaAutoresAgregadosLibro.setText("");
+        txtIsbnLibro.setText("");
+        txtValorLibro.setText("");
+        txtNumeroEjemplaresLibro.setText("");
+        txtNumeroPaginasLibro.setText("");
+        txtHipervinculoLibro.setText("");
+        txtDuracionLibro.setText("");
 
-        if (rdbtnImpresoLibro.isSelected()) {
-            int pages = Integer.parseInt(txtNumeroPaginasLibro.getText());
-            int copies = Integer.parseInt(txtNumeroEjemplaresLibro.getText());
+        txtGeneroLibro.setSelectedIndex(0);
+        ddlFormatoLibro.setSelectedIndex(0);
+        ddlEditorialLibro.setSelectedIndex(0);
+        ddlAutoresLibro.setSelectedIndex(0);
+        ddlNarradorLibro.setSelectedIndex(0);
 
-            this.books.add(new PrintedBook(title, authors, isbn, genre, format, value, publisher, pages, copies));
-        }
-        if (rdbtnDigitalLibro.isSelected()) {
-            String hyperlink = txtHipervinculoLibro.getText();
-            if (hyperlink.equals("")) {
-                this.books.add(new DigitalBook(title, authors, isbn, genre, format, value, publisher));
-            } else {
-                this.books.add(new DigitalBook(title, authors, isbn, genre, format, value, publisher, hyperlink));
-            }
-        }
-        if (rdbtnAudioLibro.isSelected()) {
-            int duration = Integer.parseInt(txtDuracionLibro.getText());
-            String[] narratorData = ddlNarradorLibro.getItemAt(ddlNarradorLibro.getSelectedIndex()).split(" - ");
-
-            long narratorId = Long.parseLong(narratorData[0]);
-
-            Narrator narrator = null;
-            for (Narrator narrat : this.narrators) {
-                if (narrat.getId() == narratorId) {
-                    narrator = narrat;
-                }
-            }
-
-            this.books.add(new Audiobook(title, authors, isbn, genre, format, value, publisher, duration, narrator));
-        }
+        rdbtnImpresoLibro.setSelected(false);
+        rdbtnDigitalLibro.setSelected(false);
+        rdbtnAudioLibro.setSelected(false);
     }//GEN-LAST:event_btnCrearLibroActionPerformed
 
     private void btnAgregarStandComprarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregarStandComprarActionPerformed
@@ -2026,61 +2068,60 @@ public class MegaferiaFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_btnConsultarStandsActionPerformed
 
     private void btnConsultarLibrosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConsultarLibrosActionPerformed
-        // TODO add your handling code here:
-        String search = ddlLibros.getItemAt(ddlLibros.getSelectedIndex());
+        String seleccion = (String) ddlLibros.getSelectedItem();
+        String filtro;
 
-        DefaultTableModel model = (DefaultTableModel) jTable4.getModel();
+        if (null == seleccion) {
+            filtro = "TODOS";
+        } else {
+            filtro = switch (seleccion) {
+                case "Libros Impresos" ->
+                    "IMPRESO";
+                case "Libros Digitales" ->
+                    "DIGITAL";
+                case "Audiolibros" ->
+                    "AUDIO";
+                default ->
+                    "TODOS";
+            };
+        }
+
+        Response response = bookController.getBooksForShowTab(filtro);
+
+        if (response.getStatus() != Status.OK) {
+            javax.swing.JOptionPane.showMessageDialog(
+                    this,
+                    response.getMessage(),
+                    "Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        @SuppressWarnings("unchecked")
+        HashMap<String, Object> data = response.getData();
+        ArrayList<HashMap<String, Object>> books
+                = (ArrayList<HashMap<String, Object>>) data.get("books");
+
+        javax.swing.table.DefaultTableModel model
+                = (javax.swing.table.DefaultTableModel) jTable4.getModel();
         model.setRowCount(0);
 
-        if (search.equals("Libros Impresos")) {
-            for (Book book : this.books) {
-                if (book instanceof PrintedBook printedBook) {
-                    String authors = printedBook.getAuthors().get(0).getFullname();
-                    for (int i = 1; i < printedBook.getAuthors().size(); i++) {
-                        authors += (", " + printedBook.getAuthors().get(i).getFullname());
-                    }
-                    model.addRow(new Object[]{printedBook.getTitle(), authors, printedBook.getIsbn(), printedBook.getGenre(), printedBook.getFormat(), printedBook.getValue(), printedBook.getPublisher().getName(), printedBook.getCopies(), printedBook.getPages(), "-", "-", "-"});
-                }
-            }
-        }
-        if (search.equals("Libros Digitales")) {
-            for (Book book : this.books) {
-                if (book instanceof DigitalBook digitalBook) {
-                    String authors = digitalBook.getAuthors().get(0).getFullname();
-                    for (int i = 1; i < digitalBook.getAuthors().size(); i++) {
-                        authors += (", " + digitalBook.getAuthors().get(i).getFullname());
-                    }
-                    model.addRow(new Object[]{digitalBook.getTitle(), authors, digitalBook.getIsbn(), digitalBook.getGenre(), digitalBook.getFormat(), digitalBook.getValue(), digitalBook.getPublisher().getName(), "-", "-", digitalBook.hasHyperlink() ? digitalBook.getHyperlink() : "No", "-", "-"});
-                }
-            }
-        }
-        if (search.equals("Audiolibros")) {
-            for (Book book : this.books) {
-                if (book instanceof Audiobook audiobook) {
-                    String authors = audiobook.getAuthors().get(0).getFullname();
-                    for (int i = 1; i < audiobook.getAuthors().size(); i++) {
-                        authors += (", " + audiobook.getAuthors().get(i).getFullname());
-                    }
-                    model.addRow(new Object[]{audiobook.getTitle(), authors, audiobook.getIsbn(), audiobook.getGenre(), audiobook.getFormat(), audiobook.getValue(), audiobook.getPublisher().getName(), "-", "-", "-", audiobook.getNarrador().getFullname(), audiobook.getDuration()});
-                }
-            }
-        }
-        if (search.equals("Todos los Libros")) {
-            for (Book book : this.books) {
-                String authors = book.getAuthors().get(0).getFullname();
-                for (int i = 1; i < book.getAuthors().size(); i++) {
-                    authors += (", " + book.getAuthors().get(i).getFullname());
-                }
-                if (book instanceof PrintedBook printedBook) {
-                    model.addRow(new Object[]{printedBook.getTitle(), authors, printedBook.getIsbn(), printedBook.getGenre(), printedBook.getFormat(), printedBook.getValue(), printedBook.getPublisher().getName(), printedBook.getCopies(), printedBook.getPages(), "-", "-", "-"});
-                }
-                if (book instanceof DigitalBook digitalBook) {
-                    model.addRow(new Object[]{digitalBook.getTitle(), authors, digitalBook.getIsbn(), digitalBook.getGenre(), digitalBook.getFormat(), digitalBook.getValue(), digitalBook.getPublisher().getName(), "-", "-", digitalBook.hasHyperlink() ? digitalBook.getHyperlink() : "No", "-", "-"});
-                }
-                if (book instanceof Audiobook audiobook) {
-                    model.addRow(new Object[]{audiobook.getTitle(), authors, audiobook.getIsbn(), audiobook.getGenre(), audiobook.getFormat(), audiobook.getValue(), audiobook.getPublisher().getName(), "-", "-", "-", audiobook.getNarrador().getFullname(), audiobook.getDuration()});
-                }
-            }
+        for (HashMap<String, Object> book : books) {
+            model.addRow(new Object[]{
+                book.get("title"),
+                book.get("authors"),
+                book.get("isbn"),
+                book.get("genre"),
+                book.get("format"),
+                book.get("value"),
+                book.get("publisher"),
+                book.get("copies"),
+                book.get("pages"),
+                book.get("url"),
+                book.get("narrator"),
+                book.get("duration")
+            });
         }
     }//GEN-LAST:event_btnConsultarLibrosActionPerformed
 
@@ -2175,6 +2216,18 @@ public class MegaferiaFrame extends javax.swing.JFrame {
     private void ddlGerenteEditorialActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ddlGerenteEditorialActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_ddlGerenteEditorialActionPerformed
+
+    private void txtGeneroLibroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtGeneroLibroActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtGeneroLibroActionPerformed
+
+    private void ddlEditorialLibroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ddlEditorialLibroActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_ddlEditorialLibroActionPerformed
+
+    private void ddlAutorConsultaLibroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ddlAutorConsultaLibroActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_ddlAutorConsultaLibroActionPerformed
 
     /**
      * @param args the command line arguments

@@ -59,12 +59,13 @@ public class StandController {
     }
 
     public Response getAllStands() {
-        List<Stand> stands = Storage.getInstance().getStands();
+
+        List<Stand> stands = new ArrayList<>(Storage.getInstance().getStands());
+        stands.sort(java.util.Comparator.comparingLong(Stand::getId));
 
         ArrayList<HashMap<String, Object>> dataList = new ArrayList<>();
 
         for (Stand stand : stands) {
-            // Construir cadena de editoriales igual que antes
             String publishersNames = "";
             if (stand.getPublisherQuantity() > 0) {
                 publishersNames += stand.getPublishers().get(0).getName();

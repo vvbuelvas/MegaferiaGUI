@@ -16,16 +16,17 @@ import java.util.HashMap;
 import java.util.List;
 
 public class PublisherController {
-     private final Storage storage;
+
+    private final Storage storage;
 
     public PublisherController() {
         this.storage = Storage.getInstance();
     }
 
     public Response createPublisher(String nit,
-                                    String name,
-                                    String address,
-                                    long managerId) {
+            String name,
+            String address,
+            long managerId) {
 
         nit = nit == null ? "" : nit.trim();
         name = name == null ? "" : name.trim();
@@ -66,7 +67,6 @@ public class PublisherController {
                     Status.BAD_REQUEST);
         }
 
-
         if (manager.getPublisher() != null) {
             return new Response("Ese gerente ya tiene una editorial asignada.",
                     Status.BAD_REQUEST);
@@ -84,38 +84,35 @@ public class PublisherController {
                 Status.CREATED,
                 data);
     }
-    
+
     public Response getAllPublishers() {
-    // Llamamos editoriales desde el Storage
-    List<Publisher> publishers = storage.getPublishers();
 
-    ArrayList<HashMap<String, Object>> publishersList = new ArrayList<>();
+        List<Publisher> publishers = new ArrayList<>(storage.getPublishers());
+        publishers.sort(java.util.Comparator.comparing(Publisher::getNit));
 
-    for (Publisher p : publishers) {
-        HashMap<String, Object> map = new HashMap<>();
-        map.put("nit", p.getNit());
-        map.put("name", p.getName());
-        map.put("address", p.getAddress());
+        ArrayList<HashMap<String, Object>> publishersList = new ArrayList<>();
 
-        String managerName = "-";
-        if (p.getManager() != null) {
-            managerName = p.getManager().getFullname();
+        for (Publisher p : publishers) {
+            HashMap<String, Object> map = new HashMap<>();
+            map.put("nit", p.getNit());
+            map.put("name", p.getName());
+            map.put("address", p.getAddress());
+
+            String managerName = "-";
+            if (p.getManager() != null) {
+                managerName = p.getManager().getFullname();
+            }
+            map.put("managerName", managerName);
+
+            map.put("standQuantity", p.getStandQuantity());
+
+            publishersList.add(map);
         }
-        map.put("managerName", managerName);
 
-        map.put("standQuantity", p.getStandQuantity());
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("publishers", publishersList);
 
-        publishersList.add(map);
+        return new Response("Editoriales obtenidas correctamente.", Status.OK, data);
     }
-
-    HashMap<String, Object> data = new HashMap<>();
-    data.put("publishers", publishersList);
-
-    return new Response(
-            "Editoriales obtenidas correctamente.",
-            Status.OK,
-            data
-    );
-}
 
 }
