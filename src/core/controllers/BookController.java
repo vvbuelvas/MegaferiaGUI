@@ -596,4 +596,38 @@ public class BookController {
                 Status.OK, data);
     }
 
+    public Response findBooksByFormat(String format) {
+        if (format == null || format.trim().isEmpty()
+                || format.startsWith("Seleccione")) {
+            return new Response("Debes seleccionar un formato válido.",
+                    Status.BAD_REQUEST);
+        }
+
+        List<Book> books = new ArrayList<>(storage.getBooks());
+        List<Book> filtered = new ArrayList<>();
+
+        for (Book b : books) {
+            if (b.getFormat() != null
+                    && b.getFormat().equalsIgnoreCase(format.trim())) {
+                filtered.add(b);
+            }
+        }
+
+        filtered.sort(Comparator.comparing(Book::getIsbn)); // orden por ISBN
+
+        ArrayList<HashMap<String, Object>> dataList = new ArrayList<>();
+        for (Book b : filtered) {
+            dataList.add(mapBook(b));
+        }
+
+        HashMap<String, Object> data = new HashMap<>();
+        data.put("books", dataList);
+
+        return new Response(
+                "Libros filtrados por formato obtenidos correctamente.",
+                Status.OK,
+                data
+        );
+    }
+
 }

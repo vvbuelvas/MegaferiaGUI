@@ -1686,6 +1686,12 @@ public class MegaferiaFrame extends javax.swing.JFrame {
         if (response.getData() != null && response.getData().get("publisher") != null) {
             Publisher publisher = (Publisher) response.getData().get("publisher");
             this.publishers.add(publisher);
+
+            String displayLibro = publisher.getName() + " (" + publisher.getNit() + ")";
+            ddlEditorialLibro.addItem(displayLibro);
+
+            String displayCompra = publisher.getName() + " (" + publisher.getNit() + ")";
+            ddlAgregarEditorialesComprar.addItem(displayCompra);
         }
 
         JOptionPane.showMessageDialog(
@@ -2126,82 +2132,135 @@ public class MegaferiaFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_btnConsultarLibrosActionPerformed
 
     private void btnConsultarPorAutorLibrosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConsultarPorAutorLibrosActionPerformed
-        // TODO add your handling code here:
-        String[] authorData = ddlAutorConsultaLibro.getItemAt(ddlAutorConsultaLibro.getSelectedIndex()).split(" - ");
-        long authorId = Long.parseLong(authorData[0]);
-
-        Author author = null;
-        for (Author auth : this.authors) {
-            if (auth.getId() == authorId) {
-                author = auth;
-            }
+        String autorItem = (String) ddlAutorConsultaLibro.getSelectedItem();
+        if (autorItem == null || autorItem.startsWith("Seleccione")) {
+            JOptionPane.showMessageDialog(this,
+                    "Debes seleccionar un autor.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
         }
+
+        String[] parts = autorItem.split(" - ");
+        long authorId;
+        try {
+            authorId = Long.parseLong(parts[0].trim());
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "El ID del autor no es válido.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        Response response = bookController.findBooksByAuthor(authorId);
+
+        if (response.getStatus() != Status.OK) {
+            JOptionPane.showMessageDialog(this,
+                    response.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        @SuppressWarnings("unchecked")
+        HashMap<String, Object> data = response.getData();
+        ArrayList<HashMap<String, Object>> books
+                = (ArrayList<HashMap<String, Object>>) data.get("books");
 
         DefaultTableModel model = (DefaultTableModel) jTable5.getModel();
         model.setRowCount(0);
 
-        for (Book book : author.getBooks()) {
-            String authors = book.getAuthors().get(0).getFullname();
-            for (int i = 1; i < book.getAuthors().size(); i++) {
-                authors += (", " + book.getAuthors().get(i).getFullname());
-            }
-            if (book instanceof PrintedBook printedBook) {
-                model.addRow(new Object[]{printedBook.getTitle(), authors, printedBook.getIsbn(), printedBook.getGenre(), printedBook.getFormat(), printedBook.getValue(), printedBook.getPublisher().getName(), printedBook.getCopies(), printedBook.getPages(), "-", "-", "-"});
-            }
-            if (book instanceof DigitalBook digitalBook) {
-                model.addRow(new Object[]{digitalBook.getTitle(), authors, digitalBook.getIsbn(), digitalBook.getGenre(), digitalBook.getFormat(), digitalBook.getValue(), digitalBook.getPublisher().getName(), "-", "-", digitalBook.hasHyperlink() ? digitalBook.getHyperlink() : "No", "-", "-"});
-            }
-            if (book instanceof Audiobook audiobook) {
-                model.addRow(new Object[]{audiobook.getTitle(), authors, audiobook.getIsbn(), audiobook.getGenre(), audiobook.getFormat(), audiobook.getValue(), audiobook.getPublisher().getName(), "-", "-", "-", audiobook.getNarrador().getFullname(), audiobook.getDuration()});
-            }
+        for (HashMap<String, Object> book : books) {
+            model.addRow(new Object[]{
+                book.get("title"),
+                book.get("authors"),
+                book.get("isbn"),
+                book.get("genre"),
+                book.get("format"),
+                book.get("value"),
+                book.get("publisher"),
+                book.get("copies"),
+                book.get("pages"),
+                book.get("url"),
+                book.get("narrator"),
+                book.get("duration")
+            });
         }
     }//GEN-LAST:event_btnConsultarPorAutorLibrosActionPerformed
 
     private void btnConsultarPorFormatoLibrosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConsultarPorFormatoLibrosActionPerformed
-        // TODO add your handling code here:
-        String format = ddlFormatoLibros.getItemAt(ddlFormatoLibros.getSelectedIndex());
+        String formato = (String) ddlFormatoLibros.getSelectedItem();
+
+        if (formato == null || formato.startsWith("Seleccione")) {
+            JOptionPane.showMessageDialog(this,
+                    "Debes seleccionar un formato.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        Response response = bookController.findBooksByFormat(formato);
+
+        if (response.getStatus() != Status.OK) {
+            JOptionPane.showMessageDialog(this,
+                    response.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        @SuppressWarnings("unchecked")
+        HashMap<String, Object> data = response.getData();
+        ArrayList<HashMap<String, Object>> books
+                = (ArrayList<HashMap<String, Object>>) data.get("books");
 
         DefaultTableModel model = (DefaultTableModel) jTable5.getModel();
         model.setRowCount(0);
 
-        for (Book book : this.books) {
-            if (book.getFormat().equals(format)) {
-                String authors = book.getAuthors().get(0).getFullname();
-                for (int i = 1; i < book.getAuthors().size(); i++) {
-                    authors += (", " + book.getAuthors().get(i).getFullname());
-                }
-                if (book instanceof PrintedBook printedBook) {
-                    model.addRow(new Object[]{printedBook.getTitle(), authors, printedBook.getIsbn(), printedBook.getGenre(), printedBook.getFormat(), printedBook.getValue(), printedBook.getPublisher().getName(), printedBook.getCopies(), printedBook.getPages(), "-", "-", "-"});
-                }
-                if (book instanceof DigitalBook digitalBook) {
-                    model.addRow(new Object[]{digitalBook.getTitle(), authors, digitalBook.getIsbn(), digitalBook.getGenre(), digitalBook.getFormat(), digitalBook.getValue(), digitalBook.getPublisher().getName(), "-", "-", digitalBook.hasHyperlink() ? digitalBook.getHyperlink() : "No", "-", "-"});
-                }
-                if (book instanceof Audiobook audiobook) {
-                    model.addRow(new Object[]{audiobook.getTitle(), authors, audiobook.getIsbn(), audiobook.getGenre(), audiobook.getFormat(), audiobook.getValue(), audiobook.getPublisher().getName(), "-", "-", "-", audiobook.getNarrador().getFullname(), audiobook.getDuration()});
-                }
-            }
+        for (HashMap<String, Object> book : books) {
+            model.addRow(new Object[]{
+                book.get("title"),
+                book.get("authors"),
+                book.get("isbn"),
+                book.get("genre"),
+                book.get("format"),
+                book.get("value"),
+                book.get("publisher"),
+                book.get("copies"),
+                book.get("pages"),
+                book.get("url"),
+                book.get("narrator"),
+                book.get("duration")
+            });
         }
     }//GEN-LAST:event_btnConsultarPorFormatoLibrosActionPerformed
 
     private void btnConsultarAutorConMasLibrosDEActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConsultarAutorConMasLibrosDEActionPerformed
-        // TODO add your handling code here:
-        ArrayList<Author> authorsMax = new ArrayList<>();
-        int maxPublishers = -1;
-        for (Author author : this.authors) {
-            if (author.getPublisherQuantity() > maxPublishers) {
-                maxPublishers = author.getPublisherQuantity();
-                authorsMax.clear();
-                authorsMax.add(author);
-            } else if (author.getPublisherQuantity() == maxPublishers) {
-                authorsMax.add(author);
-            }
+        Response response = bookController.getAuthorsWithMoreBooksInDifferentPublishers();
+
+        if (response.getStatus() != Status.OK) {
+            JOptionPane.showMessageDialog(this,
+                    response.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
         }
+
+        @SuppressWarnings("unchecked")
+        HashMap<String, Object> data = response.getData();
+        ArrayList<HashMap<String, Object>> authors
+                = (ArrayList<HashMap<String, Object>>) data.get("authors");
 
         DefaultTableModel model = (DefaultTableModel) jTable6.getModel();
         model.setRowCount(0);
 
-        for (Author author : authorsMax) {
-            model.addRow(new Object[]{author.getId(), author.getFullname(), maxPublishers});
+        for (HashMap<String, Object> author : authors) {
+            model.addRow(new Object[]{
+                author.get("id"),
+                author.get("name"),
+                author.get("count")
+            });
         }
     }//GEN-LAST:event_btnConsultarAutorConMasLibrosDEActionPerformed
 
