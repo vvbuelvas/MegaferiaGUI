@@ -28,6 +28,7 @@ import core.controllers.PersonController;
 import core.controllers.PublisherController;
 import core.controllers.PurchaseController;
 import core.models.Person;
+import core.models.storage.StorageObserver;
 import javax.swing.JOptionPane;
 
 /**
@@ -35,7 +36,7 @@ import javax.swing.JOptionPane;
  * @author jjlora
  * @author edangulo
  */
-public class MegaferiaFrame extends javax.swing.JFrame {
+public class MegaferiaFrame extends javax.swing.JFrame implements StorageObserver {
 
     private List<Stand> stands;
     private ArrayList<Author> authors;
@@ -61,6 +62,7 @@ public class MegaferiaFrame extends javax.swing.JFrame {
         this.publisherController = new PublisherController();
         this.purchaseController = new PurchaseController();
         this.bookController = new BookController();
+        Storage.getInstance().addObserver(this);
 
         this.authors = new ArrayList<>();
         this.managers = new ArrayList<>();
@@ -74,6 +76,15 @@ public class MegaferiaFrame extends javax.swing.JFrame {
         ddlLibros.addItem("Libros Digitales");
         ddlLibros.addItem("Audiolibros");
 
+    }
+    @Override
+    public void onStorageChanged() {
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            btnConsultarStandsActionPerformed(null);
+            btnConsultarPersonasActionPerformed(null);
+            btnConsultarEditorialesActionPerformed(null);
+            btnConsultarLibrosActionPerformed(null);
+        });
     }
 
     /**
@@ -2417,4 +2428,6 @@ public class MegaferiaFrame extends javax.swing.JFrame {
     private javax.swing.JTextField txtTituloLibro;
     private javax.swing.JTextField txtValorLibro;
     // End of variables declaration//GEN-END:variables
+
+ 
 }

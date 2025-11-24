@@ -17,6 +17,7 @@ public class Storage {
     private List<Person> persons;
     private List<Publisher> publishers;
     private List<Book> books;
+    private final List<StorageObserver> observers = new ArrayList<>();
 
     private Storage() {
         this.stands = new ArrayList<>();
@@ -33,12 +34,29 @@ public class Storage {
         return instance;
     }
 
+    public void addObserver(StorageObserver observer) {
+        if (observer != null && !observers.contains(observer)) {
+            observers.add(observer);
+        }
+    }
+
+    public void removeObserver(StorageObserver observer) {
+        observers.remove(observer);
+    }
+
+    private void notifyObservers() {
+        for (StorageObserver o : observers) {
+            o.onStorageChanged();
+        }
+    }
+
     public List<Stand> getStands() {
         return stands;
     }
 
     public void addStand(Stand stand) {
         this.stands.add(stand);
+        notifyObservers();
     }
 
     public List<Person> getPersons() {
@@ -47,6 +65,7 @@ public class Storage {
 
     public void addPerson(Person person) {
         this.persons.add(person);
+        notifyObservers();
     }
 
     public List<Publisher> getPublishers() {
@@ -55,6 +74,7 @@ public class Storage {
 
     public void addPublisher(Publisher publisher) {
         this.publishers.add(publisher);
+        notifyObservers();
     }
 
     public List<Book> getBooks() {
@@ -63,7 +83,7 @@ public class Storage {
 
     public void addBook(Book book) {
         this.books.add(book);
+        notifyObservers();
     }
-
 
 }
